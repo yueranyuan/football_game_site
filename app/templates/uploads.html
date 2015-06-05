@@ -1,0 +1,8 @@
+<!doctype html>
+<ul id="upload_list">
+    {% for upload in uploaded_files %}
+        <li><a href="{{ url_for('uploaded_file', filename=upload) }}">
+            {{upload}}
+        </a></li>
+    {% endfor %}
+</ul>
