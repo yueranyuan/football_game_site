@@ -1,7 +1,13 @@
 import os
-from . import app, UPLOAD_FOLDER, ALLOWED_EXTENSIONS
+from . import app, ALLOWED_EXTENSIONS
 from flask import render_template, request, url_for, redirect, send_from_directory
 from werkzeug import secure_filename
+
+@app.before_first_request
+def initialize():
+    if not os.path.isdir(app.config["UPLOAD_FOLDER"]):
+        os.mkdir(app.config["UPLOAD_FOLDER"])
+
 
 @app.route('/')
 def home():
