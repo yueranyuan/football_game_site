@@ -8,7 +8,6 @@ def initialize():
     if not os.path.isdir(app.config["UPLOAD_FOLDER"]):
         os.mkdir(app.config["UPLOAD_FOLDER"])
 
-
 @app.route('/')
 def home():
     return render_template('index.html', game_path='')
@@ -23,7 +22,6 @@ def allowed_file(filename):
 @app.route('/upload/', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        print("asfdasdf")
         file = request.files['file']
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
