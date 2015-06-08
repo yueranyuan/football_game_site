@@ -1,6 +1,6 @@
 import os
 from . import app, ALLOWED_EXTENSIONS
-from flask import render_template, request, url_for, redirect, send_from_directory
+from flask import render_template, request, send_from_directory
 from werkzeug import secure_filename
 
 @app.before_first_request
@@ -13,9 +13,6 @@ def home():
     return render_template('index.html', game_path='')
 
 def allowed_file(filename):
-    print(filename)
-    print(filename.rsplit('.', 1)[1])
-    print(ALLOWED_EXTENSIONS)
     return '.' in filename and \
             filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
@@ -25,8 +22,10 @@ def upload_file():
         file = request.files['file']
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for("uploads"))
+            file_data = file.read()
+            with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), "a") as file_handle:
+                file_handle.write(file_data)
+            return "success"
 
     return render_template('upload.html')
 

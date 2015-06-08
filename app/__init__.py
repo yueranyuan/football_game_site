@@ -4,11 +4,10 @@ import os
 
 app = Flask(__name__, instance_relative_config=True)
 UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = set(['csv'])
+ALLOWED_EXTENSIONS = set(['txt', 'csv'])
 app.config.from_object('app.config')
 app.config.from_pyfile('config.py')
 app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, UPLOAD_FOLDER)
-print(app.config)
 
 s3 = FlaskS3(app)
 
