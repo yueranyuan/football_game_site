@@ -36,5 +36,6 @@ def uploaded_file(filename):
 @app.route('/uploads/')
 def uploads():
     files = os.listdir(app.config['UPLOAD_FOLDER'])
+    files = sorted(files)
     return render_template("uploads.html", uploaded_files=files)
 
