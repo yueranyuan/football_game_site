@@ -10,7 +10,7 @@ def initialize():
 
 @app.route('/')
 def home():
-    return render_template('index.html', game_path='')
+    return render_template('index.html', game_path='bin/')
 
 def allowed_file(filename):
     return '.' in filename and \

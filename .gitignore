@@ -2,5 +2,6 @@ venv/
 uploads/
 .idea/
 instance/
+app/static/bin
 *.pyc
 *.DS_STORE
