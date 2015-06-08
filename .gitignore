@@ -1,3 +1,5 @@
 venv/
 uploads/
+.idea/
 *.pyc
+*.DS_STORE
