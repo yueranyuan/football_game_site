@@ -1,6 +1,6 @@
 import os
 from . import app, ALLOWED_EXTENSIONS
-from flask import render_template, request, send_from_directory
+from flask import render_template, request, send_from_directory, send_file
 from werkzeug import secure_filename
 
 @app.before_first_request
@@ -39,3 +39,6 @@ def uploads():
     files = sorted(files)
     return render_template("uploads.html", uploaded_files=files)
 
+@app.route('/crossdomain.xml')
+def unity_crossdomain():
+    return send_file("files/crossdomain.xml")
