@@ -29,6 +29,13 @@ def upload_file():
 
     return render_template('upload.html')
 
+@app.route('/api/update', methods=['POST'])
+def update_file():
+    fname = secure_filename(request.form.get('name'))
+    with open(os.path.join(app.config['UPLOAD_FOLDER'], fname), 'a') as f:
+        f.write(request.form.get('data'))
+    return "success"
+
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
@@ -42,3 +49,7 @@ def uploads():
 @app.route('/crossdomain.xml')
 def unity_crossdomain():
     return send_file("files/crossdomain.xml")
+
+@app.route('/experiment')
+def experiment():
+    return render_template('experiment.html')
