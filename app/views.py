@@ -1,6 +1,7 @@
 import os
 from . import app, ALLOWED_EXTENSIONS
-from flask import render_template, request, send_from_directory, send_file
+from flask import (render_template, request, send_from_directory, send_file,
+        jsonify, redirect, url_for)
 from werkzeug import secure_filename
 
 @app.before_first_request
@@ -52,4 +53,50 @@ def unity_crossdomain():
 
 @app.route('/experiment')
 def experiment():
-    return render_template('experiment.html')
+    experiment_file = request.args.get('filename')
+    if experiment_file is None:
+        return "no experiment file specified"
+
+    userid = request.args.get("userid", "unspecified_subject")
+
+    server_globals = {
+        'filename': request.args.get('filename'),
+        'userid': userid}
+    return render_template('experiment.html', server_globals=server_globals)
+
+@app.route('/setup')
+def setup_experiment():
+    return render_template('experiment_base.html', react="experiment_base.js", css="experiment_base.css")
+
+@app.route('/upload_experiment', methods=['POST'])
+def upload_experiment():
+    file = request.files['file']
+    filename = secure_filename(file.filename)
+    file_data = file.read()
+    fpath = os.path.join(app.config['EXPERIMENT_FOLDER'], filename)
+    with open(fpath, "w") as f:
+        f.write(file_data)
+    return redirect(url_for('setup_experiment'))
+
+@app.route('/experiment_data/list')
+def experiment_data():
+    experiment_names = os.listdir(app.config['EXPERIMENT_FOLDER'])
+    experiments = [{"name": v} for v in experiment_names]
+    return jsonify(experiments=experiments)
+
+def parse_csv(f, delimiter=','):
+    import csv
+    reader = csv.reader(f, delimiter=delimiter)
+    header = reader.next()
+    data = []
+    for row in reader:
+        _data = {header[i]: val for i, val in enumerate(row) if len(val) > 0}
+        data.append(_data)
+    return data
+
+@app.route('/experiment_data/single')
+def experiment_data_single():
+    filename = request.args.get('filename')
+    with open(os.path.join(app.config["EXPERIMENT_FOLDER"], filename)) as f:
+        return jsonify(data=parse_csv(f))
+    return "failure"

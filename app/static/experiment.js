@@ -1,5 +1,5 @@
 /* eslint no-unused-vars: 0 */
-/* global React $ moment setTimeout document*/
+/* global React $ moment setTimeout document window SERVER_GLOBALS */
 (function() {
     "use strict";
 
@@ -7,7 +7,9 @@
         return moment().format("YYYY-MM-DD HH:mm:ss.SSS");
     }
 
-    var globals = {};
+    var globals = {
+        userid: SERVER_GLOBALS.userid || "unspecified_user"
+    };
 
     var Logger = function(endpoint, name) {
         this.name = name || "task_" + getTime() + ".txt";
@@ -36,14 +38,12 @@
             }
             var _this = this;
             setTimeout(function() {
-                callback(_this.props.children.join(""));
+                callback(_this.props.children);
             }, this.props.timeout);
         },
         render: function() {
             return (
-                <div className="page">
-                {this.props.children}
-                </div>
+                <div className="page">{this.props.children}</div>
             );
         }
     });
@@ -60,7 +60,7 @@
         },
         render: function() {
             return (
-                <div className="inputPanel">
+                <div className="inputPanel page">
                 {this.props.message}
                 <form action="">
                 {this.props.prompt}: <input type="text" name="textfield" ref="textfield"></input>
@@ -71,13 +71,31 @@
         }
     });
 
+    var MovingText = React.createClass({
+        start: function(callback) {
+            var _this = this;
+            setTimeout(function() {
+                var stim = _this.props.x + "_" + _this.props.y + "_" + _this.props.children;
+                callback(stim);
+            }, this.props.timeout);
+        },
+        render: function() {
+            var x = this.props.x * $(window).width();
+            var y = this.props.y * $(window).height();
+            return (
+                <div className="movingText" style={{position: "absolute", left: x + "px", top: y + "px"}}>
+                {this.props.children}
+                </div>
+            );
+        }
+    });
 
     var Debrief = React.createClass({
         start: function(callback) {
         },
         render: function() {
             return (
-                <Page> experiment finished </Page>
+                <Page>experiment finished</Page>
             );
         }
     });
@@ -90,19 +108,34 @@
             var setUserid = function(val) {
                 globals.userid = val;
             };
-            this.allPages = [
-                {mode: "input", message: "Enter User Information", prompt: "userid", setter: setUserid},
-                {mode: "page", time: 10 * 1000, content: "Rest for 10 seconds"},
-                {mode: "page", time: 60 * 1000, content: "Repeatedly subtract 9 from 1000. 1000, 991, 982, 973...."},
-                {mode: "page", time: 60 * 1000, content: "Relax and think about nothing"},
-                {mode: "page", time: 60 * 1000, content: "Repeatedly subtract 8 from 1000. 1000, 992, 984, 976...."},
-                {mode: "page", time: 60 * 1000, content: "Relax and think about nothing"}];
-            this.allPages = [
-                {mode: "input", message: "Enter User Information", prompt: "userid", setter: setUserid},
-                {mode: "page", time: 1000, content: "a"},
-                {mode: "page", time: 1000, content: "b"}
+
+            // user info
+            var setup = [{mode: "input", message: "Enter User Information", prompt: "userid", setter: setUserid}];
+
+            // fixation stims
+            var fixationCount = 5;
+            var fixations = [];
+            for (var i = 0; i < fixationCount; i++) {
+                fixations[i] = {mode: "movingText", time: 2000, x: Math.random(), y: Math.random(), stim: "+"};
+            }
+
+            // eeg stims
+            var eegStims = [
+                {mode: "page", time: 10 * 1000, stim: "Rest for 10 seconds"},
+                {mode: "page", time: 60 * 1000, stim: "Repeatedly subtract 9 from 1000. 1000, 991, 982, 973...."},
+                {mode: "page", time: 60 * 1000, stim: "Relax and think about nothing"},
+                {mode: "page", time: 60 * 1000, stim: "Repeatedly subtract 8 from 1000. 1000, 992, 984, 976...."},
+                {mode: "page", time: 60 * 1000, stim: "Relax and think about nothing"}
             ];
-            this.next();
+
+            this.allPages = setup.concat(fixations, eegStims);
+            $.ajax("/experiment_data/single", {
+                data: {filename: SERVER_GLOBALS.filename},
+                success: function(ret) {
+                    this.allPages = ret.data;
+                    this.next();
+                }.bind(this)
+            });
         },
         next: function() {
             if (this.allPages.length === 0) {
@@ -124,9 +157,11 @@
         },
         makePage: function(mode) {
             if (mode === "page") {
-                return <Page ref={"page"} timeout={this.state.time}> {this.state.content} </Page>;
+                return <Page ref={"page"} timeout={this.state.time}>{this.state.stim}</Page>;
             } else if (mode === "input") {
-                return <InputPanel ref={"page"} setter={this.state.setter} prompt={this.state.prompt} message={this.state.message}/>;
+                return <InputPanel ref={"page"} setter={this.state.setter} prompt={this.state.stim} message={this.state.message}/>;
+            } else if (mode === "movingText") {
+                return <MovingText ref={"page"} x={this.state.x} y={this.state.y} timeout={this.state.time}>{this.state.stim}</MovingText>;
             } else if (mode === "finish") {
                 return <Debrief/>;
             }
