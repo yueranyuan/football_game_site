@@ -100,3 +100,8 @@ def experiment_data_single():
     with open(os.path.join(app.config["EXPERIMENT_FOLDER"], filename)) as f:
         return jsonify(data=parse_csv(f))
     return "failure"
+
+@app.route('/experiment_data/download')
+def experiment_data_download():
+    filename = secure_filename(request.args.get('filename'))
+    return send_from_directory(app.config["EXPERIMENT_FOLDER"], filename)

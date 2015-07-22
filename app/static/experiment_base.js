@@ -78,9 +78,16 @@
             });
             window.location.href = "/experiment?" + qs;
         },
+        downloadOriginal: function(e) {
+            e.preventDefault();
+            var qs = $.param({
+                filename: this.props.experimentName});
+            window.location.href = "/experiment_data/download?" + qs;
+        },
         render: function() {
             return (
                 <div className="launchPanel">
+                <button type="button" onClick={this.downloadOriginal}>download original</button>
                 <form onSubmit={this.onsubmit}>
                     UserId: <input onChange={this.changeUserid} type="text" name="userid" value={this.state.userid}/>
                     <input type="submit" value="Run Experiment"/>
